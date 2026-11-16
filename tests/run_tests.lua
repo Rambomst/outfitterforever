@@ -2392,6 +2392,73 @@ do
 end
 NoErrors()
 
+----------------------------------------
+-- Tooltip lines the game hides from addons (the minimap's mouseover tooltip,
+-- seen right after login: "attempt to index local 'vTextString' (a secret
+-- string value)" from the Mining script)
+----------------------------------------
+Step("secret tooltip lines")
+do
+	local O = env.Outfitter
+	local function Line(text, r, g, b)
+		return {
+			GetText = function() return text end,
+			GetTextColor = function() return r or 1, g or 1, b or 1 end,
+		}
+	end
+	local function Tip(name, lines)
+		for i, line in ipairs(lines) do env[name .. "TextLeft" .. i] = line end
+		return {
+			GetName = function() return name end,
+			NumLines = function() return #lines end,
+		}
+	end
+
+	local tip = Tip("OFSecretTip", { Line(W.Secret("Copper Vein")), Line("Requires Mining", 1, 0.5, 0.25) })
+
+	Check(O.GetReadableText(env.OFSecretTipTextLeft1) == nil, "a secret line reads as no text")
+	Check(O.GetReadableText(env.OFSecretTipTextLeft2) == "Requires Mining", "a normal line reads as its text")
+
+	local ok, hasText, isDifficult, isExact, lineNumber = pcall(O.TooltipContainsLine, O, tip, "Requires Mining")
+	Check(ok, "TooltipContainsLine doesn't break on a secret line: " .. tostring(hasText))
+	Check(ok and hasText and isExact and lineNumber == 2, "a readable line after a secret one is still found")
+	Check(ok and isDifficult, "and its colour is still read (orange = difficult)")
+
+	local onlySecret = Tip("OFSecretTip2", { Line(W.Secret("Mysterious")) })
+	ok, hasText = pcall(O.TooltipContainsLine, O, onlySecret, "Requires Mining")
+	Check(ok and not hasText, "a tooltip of only secret lines contains nothing")
+
+	ok, hasText = pcall(O.FindTooltipLine, O, tip, "Requires")
+	Check(ok and hasText == 2, "FindTooltipLine skips a secret line")
+
+	local texts = {}
+	ok = pcall(function()
+		for line in O.TooltipLib:TooltipLines(tip) do texts[#texts + 1] = line.leftText or "<nil>" end
+	end)
+	Check(ok and texts[1] == "<nil>" and texts[2] == "Requires Mining", "TooltipLines gives no text for a secret line")
+	texts = {}
+	ok = pcall(function()
+		for text in O.TooltipLib:TooltipLeftLines(tip) do texts[#texts + 1] = text end
+	end)
+	Check(ok and #texts == 2 and texts[1] == "" and texts[2] == "Requires Mining",
+		"TooltipLeftLines gives \"\" for a secret line and carries on")
+
+	-- The built-in Mining script itself, on a minimap tooltip with a secret line
+	local realTip = env.GameTooltip
+	env.GameTooltip = tip
+	local script = O:GenerateGatheringScript("Requires Mining", "test")
+	local fn = env.loadstring and env.loadstring(script) or loadstring(script)
+	if Check(fn, "the Mining script compiles") then
+		setfenv(fn, setmetatable({ event = "GAMETOOLTIP_SHOW", setting = {} }, { __index = env }))
+		ok = pcall(fn)
+		Check(ok, "the Mining script runs on a tooltip with a secret line")
+	end
+	env.GameTooltip = realTip
+
+	for _, name in ipairs({ "OFSecretTipTextLeft1", "OFSecretTipTextLeft2", "OFSecretTip2TextLeft1" }) do env[name] = nil end
+end
+NoErrors()
+
 for name in pairs(W.replacedBlizzardScripts) do
 	Fail("the addon set (instead of hooking) the script " .. name .. " on Blizzard's frame")
 end

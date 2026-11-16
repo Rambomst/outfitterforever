@@ -5,6 +5,15 @@
 
 local AddonName, Addon = ...
 
+-- Forever: a line's text can be secret; read it as no text (nil) instead
+local function ReadableText(fontString)
+	local text = fontString:GetText()
+	if issecretvalue and issecretvalue(text) then
+		return nil
+	end
+	return text
+end
+
 ----------------------------------------
 Addon.TooltipLib = {
 ----------------------------------------
@@ -39,7 +48,8 @@ function Addon.TooltipLib:TooltipLeftLines(tooltip)
 			tooltip[line] = fontString
 		end
 		
-		return fontString:GetText()
+		-- Forever: "" for a secret line, as nil would end the caller's loop
+		return ReadableText(fontString) or ""
 	end
 end
 
@@ -64,7 +74,7 @@ function Addon.TooltipLib:TooltipLines(tooltip)
 		local rgbColor = {}
 		rgbColor.r, rgbColor.g, rgbColor.b = fontString:GetTextColor()
 		return {
-			leftText = fontString:GetText(),
+			leftText = ReadableText(fontString), -- Forever: nil when secret
 			leftColor = rgbColor
 		}
 	end

@@ -272,7 +272,7 @@ function Outfitter:GetBagSlotItemName(bag, slot)
 	local textLeft1 = _G[textLeft1Name]
 
 	-- Return the item name
-	local itemName = textLeft1:GetText()
+	local itemName = Outfitter.GetReadableText(textLeft1) -- Forever: skip secret text
 	return itemName
 end
 

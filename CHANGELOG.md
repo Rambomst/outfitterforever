@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.4
+
+From a hunter player's report, thank you!
+
+- **Fixed:** a Lua error from Outfitter's Mining script (and other gathering scripts) when you moused over something on the minimap, often right after login. The game now hides some tooltip lines from addons; Outfitter skips those lines instead of breaking.
+
 ## 1.9.3
 
 From a druid player's report, thank you!

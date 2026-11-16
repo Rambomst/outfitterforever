@@ -4861,13 +4861,13 @@ function Outfitter:GetBuffTooltipText(pBuffIndex)
 	-- Retrieve the first line if it's shown
 	local text1
 	if textLeft1:IsShown() then
-		text1 = textLeft1:GetText()
+		text1 = Outfitter.GetReadableText(textLeft1) -- Forever: skip secret text
 	end -- if IsShown
 
 	-- Retrieve the second line if it's shown
 	local text2
 	if OutfitterTooltipTextLeft2:IsShown() then
-		text2 = textLeft2:GetText()
+		text2 = Outfitter.GetReadableText(textLeft2) -- Forever: skip secret text
 	end -- if IsShown
 
 	return text1, text2
@@ -6068,7 +6068,7 @@ function Outfitter:FindTooltipLine(pTooltip, pText, pPlain)
 			break
 		end
 
-		local vLeftText = vLeftTextFrame:GetText()
+		local vLeftText = Outfitter.GetReadableText(vLeftTextFrame) -- Forever: skip secret text
 
 		if vLeftText
 		and vLeftText:find(pText, nil, pPlain) then
@@ -7809,13 +7809,15 @@ function Outfitter:TooltipContainsLine(pTooltip, pText)
 			return false
 		end
 
-		local vTextString = vText:GetText()
+		-- Forever: a secret line (the minimap's mouseover tooltip has them) can't
+		-- be read; skip it instead of stopping, as the next line may be readable
+		local vTextString = Outfitter.GetReadableText(vText)
 
-		if not vTextString then
+		if not vTextString and not Outfitter.IsSecret(vText:GetText()) then
 			return false
 		end
 
-		if vTextString:find(pText) then
+		if vTextString and vTextString:find(pText) then
 			local vColor = {}
 			vColor.r, vColor.g, vColor.b = vText:GetTextColor()
 			local vHSVColor = Outfitter:RGBToHSV(vColor)
@@ -8033,7 +8035,7 @@ function Outfitter:CalcItemHasUseFeature(pItemLink)
 			break
 		end
 
-		local vLeftText = vLeftTextFrame:GetText()
+		local vLeftText = Outfitter.GetReadableText(vLeftTextFrame) -- Forever: skip secret text
 		if vLeftText then
 			local vStartIndex, vEndIndex = vLeftText:find(Outfitter.cUseTooltipLineFormat)
 
@@ -8062,7 +8064,7 @@ function Outfitter:CalcItemUseDuration(pItemLink)
 			break
 		end
 
-		local vLeftText = vLeftTextFrame:GetText()
+		local vLeftText = Outfitter.GetReadableText(vLeftTextFrame) -- Forever: skip secret text
 		if vLeftText then
 			local vStartIndex, vEndIndex, vSeconds = vLeftText:find(Outfitter.cUseDurationTooltipLineFormat)
 

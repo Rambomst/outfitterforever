@@ -46,6 +46,16 @@ function Outfitter.IsSecret(pValue)
 	return issecretvalue ~= nil and issecretvalue(pValue) == true
 end
 
+-- A font string's text, or nil when there's none or it's secret (Forever hides
+-- some tooltip lines, like the minimap's mouseover tooltip, from addons)
+function Outfitter.GetReadableText(pFontString)
+	local vText = pFontString and pFontString:GetText()
+	if vText == nil or Outfitter.IsSecret(vText) then
+		return nil
+	end
+	return vText
+end
+
 -- The player's specialization (talent tree) index, or nil if it isn't available
 function Outfitter:GetSpecialization()
 	local vGetSpecialization = (C_SpecializationInfo and C_SpecializationInfo.GetSpecialization) or _G["GetSpecialization"]
